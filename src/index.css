@@ -1,0 +1,297 @@
+@import "tailwindcss";
+@import "./motor/motor.css";
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("./assets/fonts/fraunces-variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Archivo";
+  src: url("./assets/fonts/archivo-variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* Tokens do projeto (DESIGN-SYSTEM.md). Componentes vindos de bibliotecas
+   externas usam só estes nomes, nunca a paleta padrão da biblioteca. */
+@theme {
+  --color-navy-950: #0a1530;
+  --color-navy-800: #132349;
+  --color-dourado-500: #d8a93f;
+  --color-dourado-300: #ecce8e;
+  --color-dourado-profundo: #a08232;
+  --color-papel: #faf6ec;
+  --color-tinta: #161312;
+
+  --font-titulo: "Fraunces", ui-serif, Georgia, serif;
+  --font-corpo: "Archivo", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+    scroll-padding-top: 24px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  body {
+    background: var(--color-navy-950);
+    color: var(--color-papel);
+    font-family: var(--font-corpo);
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    touch-action: manipulation;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-titulo);
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-dourado-300);
+    outline-offset: 2px;
+  }
+
+  a {
+    text-underline-offset: 3px;
+  }
+}
+
+/* Link de pular para o conteúdo: visível só ao receber foco. */
+.pular {
+  position: absolute;
+  left: 8px;
+  top: -100px;
+  z-index: 50;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--color-dourado-300);
+  color: var(--color-navy-950);
+  font-weight: 700;
+}
+
+.pular:focus {
+  top: 8px;
+}
+
+/* Linha-guia de destinos (assinatura da Direção A): o traço dourado se
+   desenha conforme a leitura avança (--linha, 0 a 1, do motor), e cada
+   destino acende ao ser alcançado. Sem JS ou com --linha ausente, o traço
+   fica em scaleX(0): decorativo, não esconde conteúdo (os nomes dos
+   destinos já ficam visíveis por padrão, abaixo). */
+.fx-linha-trilho {
+  transform-origin: left;
+  transform: scaleX(var(--linha, 0));
+}
+
+/* Estrela guia: anda sobre a linha de destinos conforme a leitura avança
+   (mesma --linha do motor, sem JS novo), reforçando "a estrela guia do seu
+   destino" como a marca que literalmente conduz pela rota. Sem
+   prefers-reduced-motion, --linha já chega fixa em 1 (ver motor.js), então a
+   estrela fica parada no fim da rota, sem efeito de movimento. */
+.fx-linha-estrela {
+  left: calc(var(--linha, 0) * 100%);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 4px var(--color-navy-950), 0 0 14px 2px rgba(216, 169, 63, 0.75);
+}
+
+.fx-passo-ponto {
+  opacity: 0.35;
+  transition: opacity 0.4s var(--fx-curva), transform 0.4s var(--fx-curva);
+}
+
+.fx-passo-texto {
+  opacity: 0.55;
+  transition: opacity 0.4s ease, color 0.4s ease;
+}
+
+.fx-passo-ativo .fx-passo-ponto {
+  opacity: 1;
+  transform: scale(1.3);
+}
+
+.fx-passo-ativo .fx-passo-texto {
+  opacity: 1;
+  color: var(--color-dourado-300);
+}
+
+/* Dúvidas comuns: accordion nativo (<details>), sem JS nenhum painel fica
+   escondido do leitor (basta abrir). Abertura suave por grid-template-rows,
+   técnica do componente collapse da daisyUI (CSS puro, MIT, já respeita
+   prefers-reduced-motion por padrão); ver DESIGN-SYSTEM.md seção 5 pela
+   comparação com beUI (Bouncy Accordion, rejeitado por depender da lib
+   motion). Marcador em + que vira x é autoria própria do projeto. */
+.duvida-item {
+  display: grid;
+  grid-template-rows: max-content 0fr;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .duvida-item {
+    transition: grid-template-rows 0.3s ease;
+  }
+}
+
+.duvida-item[open] {
+  grid-template-rows: max-content 1fr;
+}
+
+.duvida-item + .duvida-item {
+  border-top: 1px solid rgba(216, 169, 63, 0.2);
+}
+
+.duvida-pergunta {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 44px;
+  padding: 1.25rem 0;
+  font-family: var(--font-titulo);
+  font-size: 1.15rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-papel);
+}
+
+.duvida-pergunta::-webkit-details-marker {
+  display: none;
+}
+
+.duvida-pergunta::after {
+  content: "";
+  flex: none;
+  margin-left: auto;
+  width: 0.75rem;
+  height: 0.75rem;
+  background:
+    linear-gradient(var(--color-dourado-300), var(--color-dourado-300)) center / 100% 2px no-repeat,
+    linear-gradient(var(--color-dourado-300), var(--color-dourado-300)) center / 2px 100% no-repeat;
+  transition: transform 0.3s ease;
+}
+
+.duvida-item[open] .duvida-pergunta {
+  color: var(--color-dourado-300);
+}
+
+.duvida-item[open] .duvida-pergunta::after {
+  transform: rotate(135deg);
+}
+
+.duvida-corpo {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.duvida-corpo p {
+  padding-bottom: 1.5rem;
+}
+
+/* Ações flutuantes: ver acoes-flutuantes.tsx. Entrada só por CSS (animation),
+   nunca por estado React, pelo mesmo motivo da linha-guia acima. */
+.zap-flutuante {
+  display: inline-flex;
+  align-items: center;
+  height: 3.5rem;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  background: var(--color-dourado-500);
+  color: var(--color-navy-950);
+  box-shadow: 0 0.6rem 1.6rem -0.4rem rgba(10, 21, 48, 0.55);
+  animation: zap-entrar 480ms cubic-bezier(0.22, 1, 0.36, 1) 1.4s both;
+}
+
+.zap-flutuante:hover,
+.zap-flutuante:focus-visible {
+  background: var(--color-dourado-300);
+}
+
+.zap-flutuante__texto {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: max-width 320ms ease, margin-left 320ms ease;
+}
+
+@media (min-width: 46rem) {
+  .zap-flutuante:hover .zap-flutuante__texto,
+  .zap-flutuante:focus-visible .zap-flutuante__texto {
+    max-width: 14rem;
+    margin-left: 0.6rem;
+  }
+}
+
+@keyframes zap-entrar {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.topo-flutuante {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid rgba(216, 169, 63, 0.3);
+  border-radius: 999px;
+  background: var(--color-navy-950);
+  color: var(--color-papel);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.5rem);
+  transition: opacity 200ms ease, transform 200ms ease, visibility 200ms, border-color 200ms ease;
+}
+
+.topo-flutuante--visivel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.topo-flutuante:hover,
+.topo-flutuante:focus-visible {
+  border-color: var(--color-dourado-300);
+}
+
+@media (max-width: 43.75rem) {
+  .zap-flutuante {
+    width: 3.25rem;
+    height: 3.25rem;
+    padding: 0;
+    justify-content: center;
+  }
+  .zap-flutuante__texto {
+    display: none;
+  }
+  .topo-flutuante {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zap-flutuante {
+    animation: none;
+  }
+  .topo-flutuante {
+    transition: opacity 1ms, visibility 1ms;
+  }
+}

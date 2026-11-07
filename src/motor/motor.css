@@ -1,0 +1,80 @@
+/*!
+ * Motor de landing pages: estilos dos efeitos.
+ * Só o necessário para os atributos data-fx-* funcionarem. Identidade visual
+ * (fontes, cores, espaços) vive no CSS da página.
+ * Todo estado escondido depende de .fx-js no <html>: sem JS, tudo aparece.
+ */
+
+:root {
+  --fx-curva: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ------------------------------------------------------------ revelações */
+
+.fx-js [data-fx] {
+  opacity: 0;
+  transition: opacity 0.9s var(--fx-curva), transform 0.9s var(--fx-curva);
+}
+
+.fx-js [data-fx="subir"]    { transform: translateY(36px); }
+.fx-js [data-fx="esquerda"] { transform: translateX(-48px); }
+.fx-js [data-fx="direita"]  { transform: translateX(48px); }
+.fx-js [data-fx="crescer"]  { transform: scale(0.92); }
+
+.fx-js [data-fx].fx-em-cena {
+  opacity: 1;
+  transform: none;
+}
+
+/* ------------------------------------------------------------ cena presa */
+
+[data-fx-fixa] {
+  position: relative;
+}
+
+.fx-palco {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Etapas: o motor marca a atual com .fx-etapa-ativa. A página decide a
+   posição (normalmente empilhadas na mesma célula de uma grade). */
+.fx-js [data-fx-etapas] .fx-etapa {
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+.fx-js [data-fx-etapas] .fx-etapa.fx-etapa-ativa {
+  opacity: 1;
+}
+
+/* ------------------------------------------- movimento reduzido ou sem JS
+   Tudo visível, nada se move, a cena presa vira conteúdo corrido. */
+
+.fx-reduzido [data-fx] {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+.fx-reduzido .fx-palco,
+html:not(.fx-js) .fx-palco {
+  position: static;
+  height: auto;
+  overflow: visible;
+}
+
+.fx-reduzido [data-fx-etapas] .fx-etapa,
+html:not(.fx-js) [data-fx-etapas] .fx-etapa {
+  opacity: 1;
+  position: static !important;
+  grid-area: auto !important;
+  transform: none !important;
+  margin: 24px 0;
+}
