@@ -42,6 +42,14 @@
     html { scroll-behavior: auto; }
   }
 
+  /* Animações de entrada laterais (data-fx="direita") começam fora da tela
+     e criavam rolagem horizontal no celular. clip no main (não no body, que
+     repassa para a janela como hidden) e clip, não hidden: não vira contêiner
+     de rolagem, então o sticky do globo segue funcionando. */
+  main {
+    overflow-x: clip;
+  }
+
   body {
     background: var(--color-navy-950);
     color: var(--color-papel);
@@ -84,46 +92,195 @@
   top: 8px;
 }
 
-/* Linha-guia de destinos (assinatura da Direção A): o traço dourado se
-   desenha conforme a leitura avança (--linha, 0 a 1, do motor), e cada
-   destino acende ao ser alcançado. Sem JS ou com --linha ausente, o traço
-   fica em scaleX(0): decorativo, não esconde conteúdo (os nomes dos
-   destinos já ficam visíveis por padrão, abaixo). */
-.fx-linha-trilho {
-  transform-origin: left;
-  transform: scaleX(var(--linha, 0));
+/* Rota de destinos com globo 3D (revisão 2026-11-10, ver
+   src/componentes/globo-destinos.tsx). A seção vira um "trilho" alto e o
+   palco fica preso na tela (sticky) enquanto a rolagem conduz o tour pelos
+   destinos. O trilho só cresce com JS (.fx-js) e sem movimento reduzido:
+   sem JS, ou com movimento reduzido, a seção tem altura normal, com a lista
+   completa e o globo parado. */
+
+.fx-js:not(.fx-reduzido) .rota-trilho {
+  height: 320vh;
 }
 
-/* Estrela guia: anda sobre a linha de destinos conforme a leitura avança
-   (mesma --linha do motor, sem JS novo), reforçando "a estrela guia do seu
-   destino" como a marca que literalmente conduz pela rota. Sem
-   prefers-reduced-motion, --linha já chega fixa em 1 (ver motor.js), então a
-   estrela fica parada no fim da rota, sem efeito de movimento. */
-.fx-linha-estrela {
-  left: calc(var(--linha, 0) * 100%);
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 4px var(--color-navy-950), 0 0 14px 2px rgba(216, 169, 63, 0.75);
+.rota-palco {
+  position: relative;
+  padding-block: 6rem;
 }
 
-.fx-passo-ponto {
-  opacity: 0.35;
-  transition: opacity 0.4s var(--fx-curva), transform 0.4s var(--fx-curva);
+.fx-js:not(.fx-reduzido) .rota-palco {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  padding-block: 0;
+  display: grid;
+  align-items: center;
 }
 
-.fx-passo-texto {
-  opacity: 0.55;
-  transition: opacity 0.4s ease, color 0.4s ease;
+/* Celular: título, globo e lista empilhados; desktop: texto + lista à
+   esquerda, globo grande à direita. */
+.rota-grade {
+  display: grid;
+  width: 100%;
+  justify-items: center;
+  gap: 1.25rem;
+  grid-template-areas: "cabeca" "globo" "lista";
 }
 
-.fx-passo-ativo .fx-passo-ponto {
-  opacity: 1;
-  transform: scale(1.3);
+.rota-cabeca { grid-area: cabeca; }
+.rota-lista { grid-area: lista; }
+
+.rota-globo-caixa {
+  grid-area: globo;
+  width: min(94vw, 50svh, 640px);
+  aspect-ratio: 1;
 }
 
-.fx-passo-ativo .fx-passo-texto {
-  opacity: 1;
+@media (min-width: 768px) {
+  .rota-grade {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "cabeca globo" "lista globo";
+    justify-items: start;
+    align-items: center;
+    column-gap: 3rem;
+    row-gap: 0;
+  }
+
+  .rota-cabeca { align-self: end; }
+  .rota-lista { align-self: start; }
+
+  .rota-globo-caixa {
+    justify-self: center;
+    width: min(100%, 82svh, 640px);
+  }
+}
+
+/* Marca-d'água de fundo: --linha (0 a 1) é gravada pelo componente do
+   globo a partir do progresso no trilho. */
+.rota-fundo {
+  transform: scale(calc(1 + var(--linha, 0) * 0.1)) translateY(calc(var(--linha, 0) * -16px));
+}
+
+.rota-lista {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 1rem;
+  max-width: 34rem;
+}
+
+@media (min-width: 768px) {
+  .rota-lista {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0.15rem;
+    margin-top: 1rem;
+    border-left: 1px solid rgb(216 169 63 / 0.2);
+  }
+}
+
+.rota-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(250 246 236 / 0.45);
+  transition: color 0.4s ease, transform 0.4s var(--fx-curva);
+}
+
+.rota-item-num {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: rgb(216 169 63 / 0.5);
+  transition: color 0.4s ease;
+}
+
+.rota-item[data-ativo="1"] {
   color: var(--color-dourado-300);
 }
+
+.rota-item[data-ativo="1"] .rota-item-num {
+  color: var(--color-dourado-500);
+}
+
+@media (min-width: 768px) {
+  .rota-item {
+    position: relative;
+    padding: 0.3rem 0 0.3rem 1.25rem;
+    font-size: 1rem;
+  }
+
+  .rota-item::before {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 0.3rem;
+    bottom: 0.3rem;
+    width: 2px;
+    background: var(--color-dourado-500);
+    transform: scaleY(0);
+    transition: transform 0.4s var(--fx-curva);
+  }
+
+  .fx-js:not(.fx-reduzido) .rota-item[data-ativo="1"] {
+    transform: translateX(6px);
+  }
+
+  .fx-js:not(.fx-reduzido) .rota-item[data-ativo="1"]::before {
+    transform: scaleY(1);
+  }
+}
+
+/* Rótulos HTML presos às coordenadas no globo (globe.gl). Some quando o
+   ponto passa para o lado de trás da esfera (data-visivel="0"). */
+.globo-rotulo {
+  display: block;
+  position: absolute;
+  left: 0;
+  bottom: 10px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  font-weight: 600;
+  transition: opacity 0.35s ease;
+}
+
+.globo-ancora { width: 0; height: 0; }
+
+.globo-ancora[data-visivel="0"] .globo-rotulo {
+  opacity: 0;
+}
+
+.globo-rotulo-ativo {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgb(236 206 142 / 0.55);
+  border-radius: 999px;
+  background: rgb(10 21 48 / 0.82);
+  color: var(--color-dourado-300);
+  font-size: 0.85rem;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.35);
+  backdrop-filter: blur(4px);
+  animation: rotulo-entra 0.45s var(--fx-curva) both;
+}
+
+.globo-rotulo-origem {
+  text-shadow: 0 1px 3px rgb(10 21 48 / 0.95), 0 0 8px rgb(10 21 48 / 0.9);
+  bottom: auto;
+  top: 8px;
+  color: rgb(250 246 236 / 0.8);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@keyframes rotulo-entra {
+  from { opacity: 0; translate: 0 6px; }
+}
+
+.fx-reduzido .globo-rotulo-ativo { animation: none; }
 
 /* Dúvidas comuns: accordion nativo (<details>), sem JS nenhum painel fica
    escondido do leitor (basta abrir). Abertura suave por grid-template-rows,
@@ -294,4 +451,33 @@
   .topo-flutuante {
     transition: opacity 1ms, visibility 1ms;
   }
+}
+
+/* Celular: o palco preso tem a altura do próprio conteúdo (não 100svh),
+   colado no topo. Assim não sobra faixa navy vazia antes do título nem
+   depois do último destino antes de "Dúvidas comuns"; o globo cresce até
+   onde a tela permite. */
+@media (max-width: 767px) {
+  .fx-js:not(.fx-reduzido) .rota-trilho {
+    height: 240vh;
+  }
+
+  .fx-js:not(.fx-reduzido) .rota-palco {
+    height: auto;
+    display: block;
+    padding-block: 4.5rem 2.5rem;
+  }
+
+  .rota-globo-caixa {
+    width: min(94vw, calc(100svh - 21rem), 640px);
+    min-width: 240px;
+  }
+}
+
+/* O globo é só visual: nenhum toque/clique é capturado por ele, a rolagem
+   passa direto (ver globo-destinos.tsx). */
+.rota-globo,
+.rota-globo * {
+  pointer-events: none !important;
+  touch-action: auto !important;
 }

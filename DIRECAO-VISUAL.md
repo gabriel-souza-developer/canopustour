@@ -57,9 +57,11 @@ Espanha 2026, Atacama, Costa Rica, África do Sul, Colômbia, Uruguai 2026, Ingl
   mouse e sem animação contínua — um `data-fx-*` de entrada sóbrio (ex.: aparecer uma vez ao
   rolar). Uma imagem de destino real (a confirmar com a cliente) entra recortada à direita/abaixo
   no mobile.
-- **Pico (cena fixa):** "rota de destinos" — faixa horizontal com os destinos reais do Instagram
-  como pontos ligados por uma linha fina dourada (motivo de constelação aplicado a dados reais,
-  não decorativo). No celular vira lista vertical com marcador de ponto dourado.
+- **Pico (cena fixa):** "rota de destinos" — os destinos reais do Instagram em fluxo
+  (`flex flex-wrap`, mesmo layout em qualquer largura), cada um com conector e ponto dourado
+  próprios que acendem ao ser alcançado pela rolagem, mais profundidade 3D sutil
+  (`perspective`/`translateZ`/`rotateX`) que achata ao ativar — revisão 2026-11-09, substitui o
+  trilho único antigo que só funcionava numa única fileira (ver `DESIGN-SYSTEM.md` seção 5).
 - **Assinatura:** a linha fina dourada que liga pontos reaparece na seção de contato ligando os
   ícones de atendimento ao plantão 24h em destaque.
 - **Cor:** navy quase preto (base), dourado (ação/destaque, do próprio logo), papel claro/creme
@@ -70,9 +72,10 @@ Espanha 2026, Atacama, Costa Rica, África do Sul, Colômbia, Uruguai 2026, Ingl
   "turismo".
 - **Ritmo:** 6 cenas — abertura, rota de destinos, bloco de confiança (30 anos + curadoria),
   contato (plantão 24h + atendentes), localização (mapa), rodapé.
-- **Mobile:** linha de constelação vira traço vertical entre os destinos empilhados.
-- **Movimento:** só entrada de seção e preenchimento da linha dourada ao rolar; respeita
-  `prefers-reduced-motion` (linha aparece estática, sem desenhar).
+- **Mobile:** mesmo fluxo em flex-wrap da rota de destinos, sem breakpoint fixo de colunas; a
+  `Constelacao` do hero reaparece como marca-d'água de fundo da seção, com leve parallax.
+- **Movimento:** entrada de seção, ativação progressiva de cada destino e profundidade 3D ao
+  rolar; respeita `prefers-reduced-motion` (tudo aparece já aceso e plano, sem animar).
 
 ### Direção B — "Diário de bordo" (rejeitada como principal)
 - **Conceito:** tom editorial de revista de viagem, com fichas de destino numeradas.
@@ -112,3 +115,27 @@ constelação/linha-guia. Eixos que diferem (mínimo exigido: 3 de 5 — aqui di
 - A primeira dobra implementada deve ser observada em navegador real (desktop e celular) nesta
   máquina antes de seguir para o restante da página, conforme `npm run checar` e a etapa 4 de
   `referencias/direcao-visual.md`.
+- **Globo 3D da rota de destinos (2026-11-09)**: implementado com `cobe`, mas o container de QA
+  deste homelab não tem WebGL com GPU real, então a textura/esfera do globo não foi confirmada
+  visualmente aqui (só os marcadores desenham nesse ambiente; detalhe em `WIREFRAME.md` e
+  `DESIGN-SYSTEM.md`). Pendência real: abrir a página num navegador comum (fora deste sandbox) e
+  confirmar que o globo gira e tem textura visível antes de considerar essa peça fechada.
+
+## 6. Revisão da abertura (2026-11-10): duas colunas no desktop, cartão de atendimento
+
+Pedido do usuário: a abertura "fica estranha no desktop" (coluna única centralizada, dois títulos
+grandes empilhados, laterais vazias, atendentes abaixo da dobra). O layout adotado **não foi
+copiado de um site específico**: é um padrão de interface documentado nas fontes abaixo, todas
+abertas de verdade em 2026-11-10 (HTTP 200, texto lido), seguindo a regra da seção 0. Busca
+textual sozinha não foi contada como referência.
+
+| Fonte | URL | O que foi efetivamente visto | Como entrou na Canopus |
+|---|---|---|---|
+| LogRocket, hero section examples | https://blog.logrocket.com/ux-design/hero-section-examples-best-practices/ | Descreve o "split-column hero", que "uses two columns for the heading, supporting copy, and CTA". Cita o Sketch (https://www.sketch.com/) como exemplo. Não trata de celular nem de centralizado contra dividido. | Base do desktop: título e subtítulo numa coluna, ação na outra. |
+| Made Good Designs, hero section design (7 jun 2026) | https://madegooddesigns.com/hero-section-design/ | Tabela: "Centered: Centered text, single CTA, minimal visual, Simple, message-led landing pages" contra "Split / two-column: Text one side, visual the other". No celular, "a single narrow column with the CTA reachable in the thumb zone"; botão de no mínimo 44 px. | Desktop dividido; celular em coluna única com o plantão 24h na primeira tela e alvos de toque de 56 px. |
+| Media Boom, luxury travel website design | https://mediaboom.com/news/luxury-travel-website-design/ | Exemplos reais de turismo de luxo com contato acima da dobra: Spice Island Beach Resort (https://www.spiceislandbeachresort.com/), com "phone number is well above the fold, as is the CTA button for reservations", e Ikos Oceania (https://ikosresorts.com/resorts/ikos-oceania/), com "Book Now" acima da dobra. Não mostra layout dividido. | Justifica levar o cartão de atendimento (plantão e atendentes) para dentro da primeira tela. |
+
+Abertas e descartadas: Babich (https://babich.biz/blog/website-hero-section-6-design-best-practices/)
+não aborda colunas nem celular, só recomenda um CTA principal. DesignRush/Memorii Journeys
+(https://www.memoriijourneys.com/) tem hero "vertically split" em três vídeos, ou seja, painéis
+de vídeo e não texto ao lado de ação: padrão diferente, não usado.

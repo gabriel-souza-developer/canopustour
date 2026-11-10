@@ -87,9 +87,25 @@ try {
         el.style.transitionDuration = "";
         el.removeAttribute("data-etapa");
       });
+      // Imports dinâmicos (ex.: a pré-carga do globo) fazem o Vite injetar
+      // <link rel="modulepreload"> com endereço absoluto deste servidor
+      // temporário; gravados no HTML, virariam pedidos quebrados e forçariam
+      // baixar bibliotecas pesadas na primeira carga. Os links do próprio
+      // build usam caminho relativo e ficam.
+      document.querySelectorAll('link[rel="modulepreload"]').forEach((l) => {
+        if ((l.getAttribute("href") || "").startsWith(location.origin)) l.remove();
+      });
+      // Conteúdo montado só em tempo real (canvas WebGL, rótulos) não vai
+      // para o HTML estático: o componente monta de novo no carregamento.
+      document.querySelectorAll("[data-prerender-limpar]").forEach((el) => {
+        el.replaceChildren();
+        Object.keys(el.dataset).forEach((k) => { if (k !== "prerenderLimpar") delete el.dataset[k]; });
+      });
       return "<!doctype html>\n" + document.documentElement.outerHTML;
     });
-    writeFileSync(join(dist, "index.html"), html);
+    // Com base relativa, o Vite resolve as imagens para a URL do servidor local
+    // (mesma correção do adaptador react-vite do motor).
+    writeFileSync(join(dist, "index.html"), html.replaceAll(`http://127.0.0.1:${porta}/`, "./"));
     console.log("Pré-renderizado: dist/index.html agora tem HTML real, legível sem JS.");
   }
 } finally {

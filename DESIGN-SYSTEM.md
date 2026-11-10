@@ -63,11 +63,16 @@ Dourado é destaque pontual, nunca cor de fundo extensa (mesma referência).
   (o arquivo é um recorte de avatar, não a arte vetorial original); se a cliente enviar versão em
   alta resolução depois, trocar o arquivo sem mudar o resto do componente. A captura
   `canopustour-hall7.png` segue só como referência histórica de cor.
+- Tratamento do logo (revisão 2026-11-09): `rounded-full` com anel dourado (`ring-dourado-500/40`,
+  mais brilho suave no hero) em vez do recorte quadrado original — o arquivo JPG tem cantos duros
+  que destoavam do navy da página, lendo como adesivo colado; o recorte circular com anel reforça
+  o motivo de emblema/constelação da marca.
 
 ## 5. Componentes (escolha e função)
 
-- **Linha-guia de destinos** (assinatura, seção "rota de destinos"): componente próprio do motor
-  (`data-fx-*`), não vem de Flowbite/daisyUI — é o elemento diferenciador da Direção A.
+- **Rota de destinos** (assinatura, seção "rota de destinos"): componente próprio do motor
+  (`data-fx-*`), não vem de Flowbite/daisyUI — é o elemento diferenciador da Direção A. Revisado em
+  2026-11-09 (ver abaixo, substitui a descrição original de "linha-guia" com trilho único).
 - **Botão de contato (plantão 24h)**: estilo próprio, fundo dourado + texto navy, com ícone de
   WhatsApp; variante secundária (navy + borda dourada) para os 4 atendentes individuais, evitando
   cinco botões de peso visual idêntico como na página atual (hall7.online) — plantão 24h deve
@@ -82,11 +87,78 @@ Dourado é destaque pontual, nunca cor de fundo extensa (mesma referência).
   da daisyUI (`grid-template-rows`, CSS puro, já respeita `prefers-reduced-motion` por padrão),
   aplicada ao `<details>` nativo do projeto. O marcador "+" que vira "x" é autoria própria, não vem
   de nenhuma das fontes.
-- **Estrela guia na rota de destinos**: ponto dourado com brilho que percorre a linha-guia conforme
-  a leitura avança, usando a mesma variável `--linha` que já desenha a linha (`data-fx-linha` do
-  motor, sem lib nova). Reforça a tagline da marca ("A Estrela Guia do seu Destino") literalmente
-  guiando pela rota; para quem não quer o movimento, `--linha` já chega fixa em 1 e a estrela fica
-  parada no fim da rota.
+- **Rota de destinos, revisão 2026-11-09**: o desenho original (trilho dourado horizontal único +
+  "estrela" que percorre a linha, `.fx-linha-trilho`/`.fx-linha-estrela`) só fazia sentido para uma
+  única fileira de 9 pontos (`lg:grid-cols-9`); na grade real do celular/tablet (múltiplas linhas),
+  o trilho ficava preso no topo e não acompanhava as linhas seguintes, deixando a ativação de cada
+  destino (só opacidade/escala) quase imperceptível fora do desktop largo — relatado pelo usuário
+  como "não tem animação". Substituído por: (1) layout em fluxo (`flex flex-wrap`, não mais grade
+  fixa por breakpoint) onde cada destino ganha um conector próprio (`.fx-rota-conector`, traço curto
+  acima do ponto) que acende junto com ele, funcionando igual em qualquer largura; (2) profundidade
+  3D sutil controlada por rolagem (`.fx-rota-item`: `perspective` no contêiner da seção,
+  `translateZ`/`rotateX` por item, achatando ao ativar) — pedido explícito do usuário por "imersão
+  3D", sem brilho/tilt que segue o mouse (proibido pelo motor), CSS puro, sem dependência nova; (3)
+  a `Constelacao` do hero reaproveitada como marca-d'água de fundo da seção, com leve parallax
+  (`scale`/`translateY`) também amarrado a `--linha`. Continua sem lib nova. Com movimento reduzido,
+  `--linha` chega fixa e `.fx-passo-ativo` já é aplicado a todos de saída (ver `motor.js`): nenhuma
+  profundidade/parallax chega a animar, estado final sempre plano e completo.
+- **Rota de destinos, revisão 2026-11-09 (2): globo 3D**: a profundidade CSS acima ainda não era
+  perceptível o bastante ("tá do mesmo jeito", relato do usuário). Pesquisado e adotado `cobe`
+  (~5KB, canvas/WebGL, MIT, sem Three.js) em vez de reescrever CSS de novo — primeira dependência
+  nova da seção. `src/componentes/globo-destinos.tsx`: um marcador dourado por destino
+  (coordenadas reais, ver BRIEF.md), rotação amarrada ao progresso de rolagem da seção (não
+  mouse/hover), marcador mais próximo da face visível cresce. Base do globo em cor de papel
+  (`--color-papel`), não navy, para ter silhueta visível contra o fundo navy da página.
+  `prefers-reduced-motion` entrega um frame único estático. **Não verificado visualmente de
+  forma completa**: o container de QA deste homelab não tem WebGL com GPU real (Chromium
+  software/SwiftShader renderiza só os marcadores, não a textura do globo; Firefox nem cria
+  contexto WebGL) — detalhe em `WIREFRAME.md`.
+- **Rota de destinos, revisão 2026-11-10 (3): globe.gl + tour por rolagem**: o cobe 2.0.1 não
+  tinha mais `onRender` (globo parado num quadro só) e a superfície falhava com erro de WebGL —
+  causa real do "só os marcadores aparecem", não limitação do container. Trocado por `globe.gl`
+  (three.js, carregado sob demanda quando a seção se aproxima). Continentes em pontos dourados
+  (H3, `world-atlas` 110m; Brasil um tom mais claro; Antártida e Coreia do Norte fora, a segunda
+  porque o polígono do atlas derruba o H3), atmosfera dourada, arcos de Campina Grande (origem,
+  escritório) até cada destino com traço animado, anéis pulsando e rótulo no destino da vez.
+  A seção é um trilho (`320vh` desktop, `240vh` celular) com palco `sticky`: a rolagem leva a
+  câmera de destino em destino e acende o item correspondente na lista (contador `01 / 09`).
+  Celular: palco com a altura do conteúdo (sem faixa vazia antes/depois). Controles de
+  arrastar/zoom desligados (regra do motor + não prender a rolagem). Sem JS: lista completa, sem
+  trilho. Movimento reduzido: globo parado com todos os arcos, lista toda acesa. Lista reordenada
+  como roteiro (Américas → África → Europa). Verificado em Chromium headless (SwiftShader) via
+  container `mcr.microsoft.com/playwright`: desktop 1440, celular 390 e movimento reduzido.
+- **Bug do "preso" no celular (2026-11-10)**: o OrbitControls do globe.gl põe `touch-action: none`
+  no canvas mesmo com os controles desligados; com o globo ocupando quase a tela inteira no palco
+  preso, deslizar o dedo sobre ele não rolava a página (sentido mais notado ao voltar subindo).
+  Corrigido com `controls().enabled = false`, `touch-action: auto` e `pointer-events: none` no
+  globo. Verificado com toques CDP (touchStart/Move/End): antes 0 px de rolagem, depois rola.
+- **Globo mais rápido (2026-11-10)**: os pontos de terra deixaram de ser calculados no navegador
+  (H3 em ~10.700 células + uma malha por país). Agora vêm pré-calculados em
+  `src/assets/pontos-terra.json` (~52 KB gzip, gerado por `scripts/gerar-pontos-terra.mjs`;
+  h3-js/topojson-client/world-atlas só como devDependencies) e são desenhados como camada única de
+  partículas (`particlesData`, cor já pintada na textura porque o three-globe ignora
+  `particlesColor` com textura). A biblioteca é pré-carregada em tempo ocioso depois do `load` e o
+  globo monta a 1200px da seção (antes 400px).
+- **Abertura no desktop (2026-11-10)**: referências do padrão em `DIRECAO-VISUAL.md`, seção 6. A coluna única centralizada (marca, título, "Fale com a
+  gente", plantão e atendentes empilhados) ficava estreita e com o contato abaixo da dobra no
+  desktop. A partir de `lg` (1024px) vira duas colunas em `max-w-6xl`: à esquerda o bloco
+  editorial (logo + nome em linha, título maior alinhado à esquerda, subtítulo, link "Ver a rota
+  de destinos ↓"); à direita um cartão de atendimento (`26rem`, `28rem` em `xl`) com borda dourada
+  fina sobre navy translúcido, contendo plantão 24h e os 4 atendentes em uma coluna. Altura da
+  abertura = 1 tela (`min-h-[100svh]`). Celular/tablet sem mudança. Cores, fontes e fundo
+  (constelação) mantidos.
+- **Abertura no celular (2026-11-10)**: o contato virou o mesmo cartão do desktop (borda dourada fina,
+  navy translúcido, `p-5`/`sm:p-8`), no lugar do segundo bloco solto com título grande. Plantão 24h
+  no formato das linhas de atendente, em todos os tamanhos: ícone do WhatsApp num círculo à
+  esquerda, "Plantão 24h" + "Passageiros em viagem" (navy 75%, contraste ~5,4:1) alinhados à
+  esquerda e seta (`ArrowRight`, lucide) à direita. Atendentes compactos (`min-h-14`, avatar
+  40px), 2 colunas no tablet. Logo 64px no celular. Referências em `DIRECAO-VISUAL.md`, seção 6.
+- **Rolagem horizontal no celular (2026-11-10)**: os blocos com `data-fx="direita"` (30 anos,
+  mapa) começam 48px à direita e alargavam a página para 414px em tela de 390. Corrigido com
+  `overflow-x: clip` no `main` (não no `body`, que repassa à janela como `hidden`; e `clip`, não
+  `hidden`, para não quebrar o `sticky` do globo). Verificado: largura 390 em toda a página.
+- **Alinhamento horizontal (2026-11-10)**: seção "30 anos" passou de `max-w-5xl` para `max-w-6xl`,
+  mesma largura da rota de destinos, para as duas começarem na mesma margem esquerda.
 
 ## 6. Estados de interação e foco
 
@@ -99,11 +171,12 @@ Dourado é destaque pontual, nunca cor de fundo extensa (mesma referência).
 
 ## 7. Responsividade e movimento reduzido
 
-- Mobile-first: a "rota de destinos" (linha horizontal no desktop) empilha em lista vertical com
-  marcador de ponto dourado por destino.
-- `prefers-reduced-motion`: a linha dourada da seção de destinos aparece já completa (sem efeito
-  de "desenhar ao rolar"); nenhuma entrada de seção depende de JS para ficar legível — conteúdo
-  presente no HTML pré-renderizado (build do Formato B roda `prerenderizar.mjs`).
+- Mobile-first: a "rota de destinos" usa o mesmo fluxo (`flex flex-wrap`) em qualquer largura —
+  mais ou menos destinos por linha conforme o espaço, sem breakpoint fixo de colunas; cada destino
+  mantém seu marcador de ponto dourado e conector próprios, revisão de 2026-11-09 (ver seção 5).
+- `prefers-reduced-motion`: cada destino da rota já aparece aceso (sem efeito de ativação
+  progressiva nem profundidade 3D); nenhuma entrada de seção depende de JS para ficar legível —
+  conteúdo presente no HTML pré-renderizado (build do Formato B roda `prerenderizar.mjs`).
 - Contraste mínimo AA em todos os pares texto/fundo listados na seção 1; revisar com ferramenta de
   contraste ao implementar a primeira dobra, antes de seguir para o restante da página.
 
