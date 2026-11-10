@@ -28,10 +28,10 @@ const DESTINOS: { nome: string; location: [number, number] }[] = [
   { nome: "Colômbia", location: [10.391, -75.4794] }, // Cartagena
   { nome: "Costa Rica", location: [9.9281, -84.0907] }, // San José
   { nome: "Atacama", location: [-22.9087, -68.1997] }, // San Pedro de Atacama, Chile
-  { nome: "Uruguai 2026", location: [-34.96, -54.95] }, // Punta del Este
+  { nome: "Uruguai", location: [-34.96, -54.95] }, // Punta del Este
   { nome: "África do Sul", location: [-33.9249, 18.4241] }, // Cidade do Cabo
   { nome: "Mediterrâneo", location: [36.3932, 25.4615] }, // Santorini, Grécia
-  { nome: "Espanha 2026", location: [40.4168, -3.7038] }, // Madrid
+  { nome: "Espanha", location: [40.4168, -3.7038] }, // Madrid
   { nome: "Inglaterra", location: [51.5074, -0.1278] }, // Londres
 ];
 

@@ -159,6 +159,8 @@ Dourado é destaque pontual, nunca cor de fundo extensa (mesma referência).
   `hidden`, para não quebrar o `sticky` do globo). Verificado: largura 390 em toda a página.
 - **Alinhamento horizontal (2026-11-10)**: seção "30 anos" passou de `max-w-5xl` para `max-w-6xl`,
   mesma largura da rota de destinos, para as duas começarem na mesma margem esquerda.
+- **Nomes sem ano (2026-11-10)**: pedido da cliente, "Uruguai 2026" e "Espanha 2026" passaram a
+  "Uruguai" e "Espanha" na rota (lista e rótulo do globo). O BRIEF mantém o nome original da fonte.
 
 ## 6. Estados de interação e foco
 
